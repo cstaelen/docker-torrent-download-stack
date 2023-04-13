@@ -1,0 +1,146 @@
+version: "3.7"
+
+services:
+  # https://doc.traefik.io/traefik/getting-started/quick-start/
+  reverse-proxy:
+    image: traefik:latest
+    container_name: traefik
+    command: --api.insecure=true --providers.docker
+    ports:
+      - "80:80"
+      - "8888:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  # https://github.com/linuxserver/docker-transmission
+  transmission:
+    image: lscr.io/linuxserver/transmission:latest
+    container_name: transmission
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/transmission/config:/config
+      - /share/CACHEDEV1_DATA/Download:/downloads
+      - /share/CACHEDEV1_DATA/Download/watch:/watch
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.transmission.rule=Host(`transmission.nas.docker`)
+      - traefik.port=80
+
+  # https://github.com/linuxserver/docker-radarr
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    restart: always
+    ports:
+      - "7878:7878"
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/radarr/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/movies:/movies
+      - /share/CACHEDEV1_DATA/Download:/downloads
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr.rule=Host(`radarr.nas.docker`)
+      - traefik.port=80
+
+  # https://github.com/linuxserver/docker-sonarr
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    restart: always
+    ports:
+      - "8989:8989"
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/sonarr/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/TvShow:/tv
+      - /share/CACHEDEV1_DATA/Download:/downloads
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr.rule=Host(`sonarr.nas.docker`)
+      - traefik.port=80
+
+  # https://hub.docker.com/r/linuxserver/lidarr
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/lidarr/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/Music:/music #optional
+      - /share/CACHEDEV1_DATA/Download:/downloads
+    ports:
+      - 8686:8686
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.lidarr.rule=Host(`lidarr.nas.docker`)
+      - traefik.port=80
+
+  # https://github.com/linuxserver/docker-prowlarr
+  prowlarr:
+    image: linuxserver/prowlarr:develop
+    container_name: prowlarr
+    restart: always
+    ports:
+      - "9696:9696"
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/prowlarr/config:/config
+      - /share/CACHEDEV1_DATA/Download/watch:/downloads  # transmission watch directory
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prowlarr.rule=Host(`prowlarr.nas.docker`)
+      - traefik.port=80
+
+  # https://hub.docker.com/r/linuxserver/overseerr    
+  overseerr:
+    image: lscr.io/linuxserver/overseerr:latest
+    container_name: overseerr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - "/share/CACHEDEV1_DATA/Container/overseerr/config:/config"
+    ports:
+      - 5055:5055
+    restart: unless-stopped
+
+  # https://gotify.net/docs/install    
+  gotify:
+    image: gotify/server
+    container_name: gotify
+    ports:
+      - 8282:80
+    environment:
+      - GOTIFY_DEFAULTUSER_PASS=your_passwd
+    volumes:
+      - "/share/CACHEDEV1_DATA/Container/gotify/config:/app/data"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.gotify.rule=Host(`gotify.nas.docker`)
+      - traefik.port=80
