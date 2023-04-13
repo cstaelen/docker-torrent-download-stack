@@ -128,7 +128,11 @@ services:
       - "/share/CACHEDEV1_DATA/Container/overseerr/config:/config"
     ports:
       - 5055:5055
-    restart: unless-stopped
+    restart: always
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.overseerr.rule=Host(`overseerr.nas.docker`)
+      - traefik.port=80
 
   # https://gotify.net/docs/install    
   gotify:
@@ -137,7 +141,7 @@ services:
     ports:
       - 8282:80
     environment:
-      - GOTIFY_DEFAULTUSER_PASS=your_passwd
+      - GOTIFY_DEFAULTUSER_PASS=G0t1fY!!
     volumes:
       - "/share/CACHEDEV1_DATA/Container/gotify/config:/app/data"
     labels:
