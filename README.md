@@ -1,4 +1,4 @@
-# docker-prowlarr-radarr-sonarr-transmission
+# Docker torrent download stack
 Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Overseer, Gotify & Transmission
 
 ## Services
