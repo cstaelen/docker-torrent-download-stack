@@ -12,29 +12,44 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
 
-  # https://github.com/linuxserver/docker-transmission
-  transmission:
-    image: lscr.io/linuxserver/transmission:latest
-    container_name: transmission
+  wireguard:
+    image: linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv4.conf.all.src_valid_mark=1
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Paris
+    ports:
+      - "9091:9091/tcp"
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/wireguard/wg-client.conf:/config/wg0.conf
+      - /lib/modules:/lib/modules
+    restart: always
+
+  transmission:
+    image: linuxserver/transmission:latest
+    container_name: transmission
+    network_mode: "service:wireguard"
+    depends_on:
+      - wireguard
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+      - USER=admin
+      - PASS=password
     volumes:
       - /share/CACHEDEV1_DATA/Container/transmission/config:/config
       - /share/CACHEDEV1_DATA/Download:/downloads
       - /share/CACHEDEV1_DATA/Download/watch:/watch
-      - /etc/localtime:/etc/localtime:ro
-    ports:
-      - 9091:9091
-      - 51413:51413
-      - 51413:51413/udp
-    restart: unless-stopped
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.transmission.rule=Host(`transmission.nas.docker`)
-      - traefik.port=80
-
+    restart: always
+    
   # https://github.com/linuxserver/docker-radarr
   radarr:
     image: linuxserver/radarr:latest
@@ -48,7 +63,7 @@ services:
       - TZ=Europe/Paris
     volumes:
       - /share/CACHEDEV1_DATA/Container/radarr/config:/config
-      - /share/CACHEDEV1_DATA/Multimedia/movies:/movies
+      - /share/CACHEDEV1_DATA/Multimedia/Movies:/movies
       - /share/CACHEDEV1_DATA/Download:/downloads
     labels:
       - traefik.enable=true
@@ -110,41 +125,8 @@ services:
       - TZ=Europe/Paris
     volumes:
       - /share/CACHEDEV1_DATA/Container/prowlarr/config:/config
-      - /share/CACHEDEV1_DATA/Download/watch:/downloads  # transmission watch directory
+      - /share/CACHEDEV1_DATA/Download/watch:/downloads # transmission watch directory
     labels:
       - traefik.enable=true
       - traefik.http.routers.prowlarr.rule=Host(`prowlarr.nas.docker`)
-      - traefik.port=80
-
-  # https://hub.docker.com/r/linuxserver/overseerr    
-  overseerr:
-    image: lscr.io/linuxserver/overseerr:latest
-    container_name: overseerr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-    volumes:
-      - "/share/CACHEDEV1_DATA/Container/overseerr/config:/config"
-    ports:
-      - 5055:5055
-    restart: always
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.overseerr.rule=Host(`overseerr.nas.docker`)
-      - traefik.port=80
-
-  # https://gotify.net/docs/install    
-  gotify:
-    image: gotify/server
-    container_name: gotify
-    ports:
-      - 8282:80
-    environment:
-      - GOTIFY_DEFAULTUSER_PASS=G0t1fY!!
-    volumes:
-      - "/share/CACHEDEV1_DATA/Container/gotify/config:/app/data"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.gotify.rule=Host(`gotify.nas.docker`)
       - traefik.port=80
