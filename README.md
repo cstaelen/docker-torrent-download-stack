@@ -1,5 +1,5 @@
-# Docker torrent download stack
-Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Overseer, Gotify & Transmission
+# Docker wireguard torrent stack
+Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify & Transmission with Wireguard
 
 ## Services
 - **traefik**: https://traefik.nas.docker
@@ -8,8 +8,6 @@ Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Overseer, Gotify & Transmissi
 - **sonarr**: https://sonarr.nas.docker
 - **lidarr**: https://lidarr.nas.docker
 - **prowlarr**: https://prowlarr.nas.docker
-- **overseer**: https://overseer.nas.docker
-- **gotify**: https://gotify.nas.docker
 
 ## Volumes folder structure
 - **/share/CACHEDEV1_DATA/Container**: Used to store container config data
