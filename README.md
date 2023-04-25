@@ -3,7 +3,7 @@ Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Overseer, Gotify & Transmissi
 
 ## Services
 - **traefik**: https://traefik.nas.docker
-- **transmission**: https://transmission.nas.docker
+- **transmission**: https://transmission.nas.docker:9091
 - **radarr**: https://radarr.nas.docker
 - **sonarr**: https://sonarr.nas.docker
 - **lidarr**: https://lidarr.nas.docker
