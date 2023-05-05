@@ -1,13 +1,14 @@
 # Docker wireguard torrent stack
-Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify & Transmission with Wireguard
+Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify using Transmission with Wireguard & Tidal DL.
 
 ## Services
-- **traefik**: https://traefik.nas.docker
-- **transmission**: https://transmission.nas.docker:9091
-- **radarr**: https://radarr.nas.docker
-- **sonarr**: https://sonarr.nas.docker
-- **lidarr**: https://lidarr.nas.docker
-- **prowlarr**: https://prowlarr.nas.docker
+- **traefik**: http://traefik.nas.docker
+- **transmission**: http://transmission.nas.docker:9091
+- **radarr**: http://radarr.nas.docker
+- **sonarr**: http://sonarr.nas.docker
+- **lidarr**: http://lidarr.nas.docker
+- **prowlarr**: http://prowlarr.nas.docker
+- **glances**: http://glances.nas.docker
 
 ## Volumes folder structure
 - **/share/CACHEDEV1_DATA/Container**: Used to store container config data
@@ -19,6 +20,19 @@ Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify & Transmission with Wi
 - **/share/CACHEDEV1_DATA/Multimedia/Movies**: This volume is used by the `radarr` service to access the movie library.
 - **/share/CACHEDEV1_DATA/Multimedia/TvShow**: This volume is used by the `sonarr` service to access the TV show library.
 - **/share/CACHEDEV1_DATA/Multimedia/Music**: This volume is used by the `lidarr` service to access the TV show library.
+
+## Lidarr - Tidal
+The `docker-compose.yml` is set here to use Tidal account to download lossless Flac tracks. 
+
+Maybe you will have to update Tidal country isocode : `tidalCountryCode=FR`.
+
+To authenticate, run `docker-compose up lidarr` you will prompted to link your Tidal account by using browser.
+
+**I don't own Tidal account :**
+
+Please check lidarr-extended page for more details : https://hub.docker.com/r/randomninjaatk/lidarr-extended
+But you are still able to connect Prowlarr service instead.
+
 
 ## Doc
 - **traefik**: https://doc.traefik.io/traefik/getting-started/quick-start/
