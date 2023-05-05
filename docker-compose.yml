@@ -90,18 +90,47 @@ services:
       - traefik.http.routers.sonarr.rule=Host(`sonarr.nas.docker`)
       - traefik.port=80
 
-  # https://hub.docker.com/r/linuxserver/lidarr
+  # https://hub.docker.com/r/randomninjaatk/lidarr-extended
   lidarr:
-    image: lscr.io/linuxserver/lidarr:latest
+    image: randomninjaatk/lidarr-extended:latest
     container_name: lidarr
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Etc/UTC
     volumes:
       - /share/CACHEDEV1_DATA/Container/lidarr/config:/config
-      - /share/CACHEDEV1_DATA/Multimedia/Music:/music #optional
-      - /share/CACHEDEV1_DATA/Download:/downloads
+      - /share/CACHEDEV1_DATA/Download:/downloads-lidarr-extended
+      - /share/CACHEDEV1_DATA/Multimedia/Music:/music
+    environment:
+      - TZ=Europ/Paris
+      - PUID=1000
+      - PGID=1000
+      - enableAudioScript=true
+      - enableVideoScript=false
+      - scriptInterval=15m
+      - configureLidarrWithOptimalSettings=true
+      - searchSort=date
+      - audioFormat=native
+      - audioBitrate=lossless
+      - requireQuality=true
+      - enableReplaygainTags=true
+      - audioLyricType=both
+      - dlClientSource=tidal
+      - arlToken=Token_Goes_Here
+      - tidalCountryCode=FR
+      - addDeezerTopArtists=false
+      - addDeezerTopAlbumArtists=false
+      - addDeezerTopTrackArtists=false
+      - topLimit=10
+      - addRelatedArtists=false
+      - numberOfRelatedArtistsToAddPerArtist=0
+      - lidarrSearchForMissing=true
+      - addFeaturedVideoArtists=false
+      - plexUrl=http://192.168.1.20:32400
+      - plexToken=Token_Goes_Here
+      - youtubeSubtitleLanguage=fr
+      - enableQueueCleaner=true
+      - matchDistance=5
+      - enableBeetsTagging=true
+      - beetsMatchPercentage=90
+      - retryNotFound=90
     ports:
       - 8686:8686
     restart: unless-stopped
@@ -130,3 +159,20 @@ services:
       - traefik.enable=true
       - traefik.http.routers.prowlarr.rule=Host(`prowlarr.nas.docker`)
       - traefik.port=80
+      
+  glances:
+    container_name: glances
+    image: nicolargo/glances:dev
+    restart: unless-stopped
+    pid: host
+    privileged: true
+    network_mode: "host"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "/share/CACHEDEV1_DATA/Container/glances/glances.conf:/glances/conf/glances.conf"
+    environment:
+      GLANCES_OPT: "-C /glances/conf/glances.conf -w"
+      TZ: "${TZ}"
+    labels:
+      - "traefik.port=61208"
+      - "traefik.frontend.rule=Host:glances.nas.docker"
