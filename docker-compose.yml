@@ -27,8 +27,9 @@ services:
       - TZ=Europe/Paris
     ports:
       - "9091:9091/tcp"
+      - "54914:54914/tcp"
     volumes:
-      - /share/CACHEDEV1_DATA/Container/wireguard/wg-client.conf:/config/wg0.conf
+      - /share/CACHEDEV1_DATA/Container/wireguard/wgraoul.conf:/config/wg0.conf
       - /lib/modules:/lib/modules
     restart: always
 
@@ -43,13 +44,13 @@ services:
       - PGID=1000
       - TZ=Europe/Paris
       - USER=admin
-      - PASS=password
+      - PASS=yourpassword
     volumes:
       - /share/CACHEDEV1_DATA/Container/transmission/config:/config
       - /share/CACHEDEV1_DATA/Download:/downloads
       - /share/CACHEDEV1_DATA/Download/watch:/watch
     restart: always
-    
+
   # https://github.com/linuxserver/docker-radarr
   radarr:
     image: linuxserver/radarr:latest
@@ -90,47 +91,21 @@ services:
       - traefik.http.routers.sonarr.rule=Host(`sonarr.nas.docker`)
       - traefik.port=80
 
-  # https://hub.docker.com/r/randomninjaatk/lidarr-extended
+  # https://github.com/linuxserver/docker-lidarr
+  # https://github.com/RandomNinjaAtk/arr-scripts
   lidarr:
-    image: randomninjaatk/lidarr-extended:latest
+    image: linuxserver/lidarr:latest
     container_name: lidarr
+    environment:
+      - PUID=501
+      - PGID=501
+      - TZ=Etc/UTC
     volumes:
       - /share/CACHEDEV1_DATA/Container/lidarr/config:/config
-      - /share/CACHEDEV1_DATA/Download:/downloads-lidarr-extended
+      - /share/CACHEDEV1_DATA/Download:/downloads
       - /share/CACHEDEV1_DATA/Multimedia/Music:/music
-    environment:
-      - TZ=Europ/Paris
-      - PUID=1000
-      - PGID=1000
-      - enableAudioScript=true
-      - enableVideoScript=false
-      - scriptInterval=15m
-      - configureLidarrWithOptimalSettings=true
-      - searchSort=date
-      - audioFormat=native
-      - audioBitrate=lossless
-      - requireQuality=true
-      - enableReplaygainTags=true
-      - audioLyricType=both
-      - dlClientSource=tidal
-      - arlToken=Token_Goes_Here
-      - tidalCountryCode=FR
-      - addDeezerTopArtists=false
-      - addDeezerTopAlbumArtists=false
-      - addDeezerTopTrackArtists=false
-      - topLimit=10
-      - addRelatedArtists=false
-      - numberOfRelatedArtistsToAddPerArtist=0
-      - lidarrSearchForMissing=true
-      - addFeaturedVideoArtists=false
-      - plexUrl=http://192.168.1.20:32400
-      - plexToken=Token_Goes_Here
-      - youtubeSubtitleLanguage=fr
-      - enableQueueCleaner=true
-      - matchDistance=5
-      - enableBeetsTagging=true
-      - beetsMatchPercentage=90
-      - retryNotFound=90
+      - /share/CACHEDEV1_DATA/Container/lidarr/custom-services.d:/custom-services.d
+      - /share/CACHEDEV1_DATA/Container/lidarr/custom-cont-init.d:/custom-cont-init.d
     ports:
       - 8686:8686
     restart: unless-stopped
@@ -159,7 +134,79 @@ services:
       - traefik.enable=true
       - traefik.http.routers.prowlarr.rule=Host(`prowlarr.nas.docker`)
       - traefik.port=80
-      
+
+  # https://github.com/linuxserver/docker-bazarr
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/bazarr/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/Movies:/movies
+      - /share/CACHEDEV1_DATA/Multimedia/TvShow:/tv
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bazarr.rule=Host(`bazarr.nas.docker`)
+      - traefik.port=80
+
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVERnone
+      - TZ=Europe/Paris
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.nas.docker`)
+      - traefik.port=80
+
+  # https://docs.linuxserver.io/images/docker-beets
+  beets:
+    image: lscr.io/linuxserver/beets:latest
+    container_name: beets
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Paris
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/beets/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/MusicToBeet:/downloads
+      - /share/CACHEDEV1_DATA/Multimedia/Music:/music
+    ports:
+      - 8337:8337
+    restart: unless-stopped
+
+  tidarr:
+    image: cstaelen/tidarr:latest
+    container_name: 'tidarr'
+    platform: linux/amd64
+    ports:
+      - 3000:3000
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/tidarr/config/.tidal-dl.token.json:/root/.tidal-dl.token.json
+      - /share/CACHEDEV1_DATA/Container/tidarr/config/.tidal-dl.json:/root/.tidal-dl.json
+      - /share/CACHEDEV1_DATA/Multimedia/MusicToBeet:/home/app/standalone/download
+    restart: 'unless-stopped'
+    environment:
+      - NEXT_PUBLIC_TIDAL_SEARCH_TOKEN=<your_token>
+      - NEXT_PUBLIC_TIDAL_COUNTRY_CODE=<country_code>
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.tidarr.rule=Host(`tidarr.nas.docker`)
+      - traefik.port=80
+
   glances:
     container_name: glances
     image: nicolargo/glances:dev
@@ -176,3 +223,18 @@ services:
     labels:
       - "traefik.port=61208"
       - "traefik.frontend.rule=Host:glances.nas.docker"
+
+  portainer_edge_agent:
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/var/lib/docker/volumes:/var/lib/docker/volumes'
+      - '/:/host'
+      - './data:/data'
+    restart: always
+    environment:
+      - EDGE=1
+      - EDGE_ID=<your_id>
+      - EDGE_KEY=<your_key>
+      - EDGE_INSECURE_POLL=1
+    container_name: portainer_edge_agent
+    image: 'portainer/agent:2.16.2'
