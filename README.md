@@ -9,6 +9,9 @@ Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify using Transmission wit
 - **lidarr**: http://lidarr.nas.docker
 - **prowlarr**: http://prowlarr.nas.docker
 - **glances**: http://glances.nas.docker
+- **flaresolver**
+- **watchtower**
+- **portainer-agent**
 
 ## Volumes folder structure
 - **/share/CACHEDEV1_DATA/Container**: Used to store container config data
@@ -20,19 +23,6 @@ Docker stack for Prowlarr, Radarr, Sonarr, Lidarr, Gotify using Transmission wit
 - **/share/CACHEDEV1_DATA/Multimedia/Movies**: This volume is used by the `radarr` service to access the movie library.
 - **/share/CACHEDEV1_DATA/Multimedia/TvShow**: This volume is used by the `sonarr` service to access the TV show library.
 - **/share/CACHEDEV1_DATA/Multimedia/Music**: This volume is used by the `lidarr` service to access the TV show library.
-
-## Lidarr - Tidal
-The `docker-compose.yml` is set here to use Tidal account to download lossless Flac tracks. 
-
-Maybe you will have to update Tidal country isocode : `tidalCountryCode=FR`.
-
-To authenticate, run `docker-compose up lidarr` you will prompted to link your Tidal account by using browser.
-
-**I don't own Tidal account :**
-
-Please check lidarr-extended page for more details : https://hub.docker.com/r/randomninjaatk/lidarr-extended
-But you are still able to connect Prowlarr service instead.
-
 
 ## Doc
 - **traefik**: https://doc.traefik.io/traefik/getting-started/quick-start/

@@ -1,7 +1,9 @@
 version: "3.7"
 
 services:
+
   # https://doc.traefik.io/traefik/getting-started/quick-start/
+
   reverse-proxy:
     image: traefik:latest
     container_name: traefik
@@ -28,6 +30,7 @@ services:
     ports:
       - "9091:9091/tcp"
       - "54914:54914/tcp"
+      - "51820:51820/udp"
     volumes:
       - /share/CACHEDEV1_DATA/Container/wireguard/wgraoul.conf:/config/wg0.conf
       - /lib/modules:/lib/modules
@@ -44,7 +47,7 @@ services:
       - PGID=1000
       - TZ=Europe/Paris
       - USER=admin
-      - PASS=yourpassword
+      - PASS=Tr@nsm1ss10n!!
     volumes:
       - /share/CACHEDEV1_DATA/Container/transmission/config:/config
       - /share/CACHEDEV1_DATA/Download:/downloads
@@ -52,6 +55,7 @@ services:
     restart: always
 
   # https://github.com/linuxserver/docker-radarr
+
   radarr:
     image: linuxserver/radarr:latest
     container_name: radarr
@@ -72,6 +76,7 @@ services:
       - traefik.port=80
 
   # https://github.com/linuxserver/docker-sonarr
+
   sonarr:
     image: linuxserver/sonarr:latest
     container_name: sonarr
@@ -91,15 +96,15 @@ services:
       - traefik.http.routers.sonarr.rule=Host(`sonarr.nas.docker`)
       - traefik.port=80
 
-  # https://github.com/linuxserver/docker-lidarr
-  # https://github.com/RandomNinjaAtk/arr-scripts
+  # https://hub.docker.com/r/randomninjaatk/lidarr-extended
+
   lidarr:
     image: linuxserver/lidarr:latest
     container_name: lidarr
     environment:
       - PUID=501
       - PGID=501
-      - TZ=Etc/UTC
+      - TZ=Europe/Paris
     volumes:
       - /share/CACHEDEV1_DATA/Container/lidarr/config:/config
       - /share/CACHEDEV1_DATA/Download:/downloads
@@ -115,8 +120,9 @@ services:
       - traefik.port=80
 
   # https://github.com/linuxserver/docker-prowlarr
+
   prowlarr:
-    image: linuxserver/prowlarr:develop
+    image: linuxserver/prowlarr:latest
     container_name: prowlarr
     restart: always
     ports:
@@ -136,6 +142,7 @@ services:
       - traefik.port=80
 
   # https://github.com/linuxserver/docker-bazarr
+  
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -155,8 +162,9 @@ services:
       - traefik.http.routers.bazarr.rule=Host(`bazarr.nas.docker`)
       - traefik.port=80
 
+  # https://github.com/flaresolverr/flaresolverr
+
   flaresolverr:
-    # DockerHub mirror flaresolverr/flaresolverr:latest
     image: ghcr.io/flaresolverr/flaresolverr:latest
     container_name: flaresolverr
     environment:
@@ -172,44 +180,41 @@ services:
       - traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.nas.docker`)
       - traefik.port=80
 
-  # https://docs.linuxserver.io/images/docker-beets
-  beets:
-    image: lscr.io/linuxserver/beets:latest
-    container_name: beets
-    environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/Paris
-    volumes:
-      - /share/CACHEDEV1_DATA/Container/beets/config:/config
-      - /share/CACHEDEV1_DATA/Multimedia/MusicToBeet:/downloads
-      - /share/CACHEDEV1_DATA/Multimedia/Music:/music
-    ports:
-      - 8337:8337
-    restart: unless-stopped
+  # https://github.com/cstaelen/tidarr
 
   tidarr:
     image: cstaelen/tidarr:latest
     container_name: 'tidarr'
-    platform: linux/amd64
-    ports:
-      - 3000:3000
     volumes:
-      - /share/CACHEDEV1_DATA/Container/tidarr/config/.tidal-dl.token.json:/root/.tidal-dl.token.json
-      - /share/CACHEDEV1_DATA/Container/tidarr/config/.tidal-dl.json:/root/.tidal-dl.json
-      - /share/CACHEDEV1_DATA/Multimedia/MusicToBeet:/home/app/standalone/download
+      - /share/CACHEDEV1_DATA/Container/tidarr/config:/home/app/standalone/shared
+      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/albums:/home/app/standalone/download/albums
+      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/tracks:/home/app/standalone/download/tracks
     restart: 'unless-stopped'
+    ports:
+      - 8484:8484
     environment:
-      - NEXT_PUBLIC_TIDAL_SEARCH_TOKEN=<your_token>
-      - NEXT_PUBLIC_TIDAL_COUNTRY_CODE=<country_code>
+      - TZ=Europe/Paris
+      - ENABLE_BEETS=true
+      - REACT_APP_TIDAL_COUNTRY_CODE=FR
+      - ENABLE_PLEX_UPDATE=true
+      - PLEX_URL=http://192.168.1.20:32400
+      - PLEX_LIBRARY=3
+      - PLEX_TOKEN=544czRJ-En3odTw2VQic
+      - PLEX_PATH=/share/CACHEDEV1_DATA/Multimedia/Music/_tidarr
+      - ENABLE_GOTIFY=true
+      - GOTIFY_URL=http://push.pi.docker
+      - GOTIFY_TOKEN=AMWzZcjUWqAJP8_
+      - ADMIN_PASSWORD=T1d4rr!!
     labels:
       - traefik.enable=true
       - traefik.http.routers.tidarr.rule=Host(`tidarr.nas.docker`)
       - traefik.port=80
 
+  # https://github.com/nicolargo/glances
+
   glances:
+    image: nicolargo/glances:latest
     container_name: glances
-    image: nicolargo/glances:dev
     restart: unless-stopped
     pid: host
     privileged: true
@@ -218,23 +223,35 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "/share/CACHEDEV1_DATA/Container/glances/glances.conf:/glances/conf/glances.conf"
     environment:
-      GLANCES_OPT: "-C /glances/conf/glances.conf -w"
-      TZ: "${TZ}"
+      GLANCES_OPT: "-C /glances/conf/glances.conf -w --enable-plugin sensors"
+      TZ: "Europe/Paris"
+    ports:
+      - "61208:61208"
     labels:
       - "traefik.port=61208"
       - "traefik.frontend.rule=Host:glances.nas.docker"
 
+  # https://github.com/portainer/agent
+
   portainer_edge_agent:
+    image: 'portainer/agent:latest'
+    ports:
+      - "9001:9001"
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock'
       - '/var/lib/docker/volumes:/var/lib/docker/volumes'
-      - '/:/host'
-      - './data:/data'
     restart: always
-    environment:
-      - EDGE=1
-      - EDGE_ID=<your_id>
-      - EDGE_KEY=<your_key>
-      - EDGE_INSECURE_POLL=1
     container_name: portainer_edge_agent
-    image: 'portainer/agent:2.16.2'
+
+  # https://github.com/containrrr/watchtower/
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /share/CACHEDEV1_DATA/Container/watchtower/config.json:/config.json
+    environment:
+      - WATCHTOWER_NOTIFICATIONS=gotify
+      - WATCHTOWER_NOTIFICATION_GOTIFY_URL=http://push.pi.docker
+      - WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN=ArQd6F4o1j4zQka
