@@ -142,7 +142,7 @@ services:
       - traefik.port=80
 
   # https://github.com/linuxserver/docker-bazarr
-  
+
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
@@ -189,6 +189,8 @@ services:
       - /share/CACHEDEV1_DATA/Container/tidarr/config:/home/app/standalone/shared
       - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/albums:/home/app/standalone/download/albums
       - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/tracks:/home/app/standalone/download/tracks
+      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/playslits:/home/app/standalone/download/playlists
+      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/videos:/home/app/standalone/download/videos
     restart: 'unless-stopped'
     ports:
       - 8484:8484
@@ -199,16 +201,68 @@ services:
       - ENABLE_PLEX_UPDATE=true
       - PLEX_URL=http://192.168.1.20:32400
       - PLEX_LIBRARY=3
-      - PLEX_TOKEN=544czRJ-En3odTw2VQic
+      - PLEX_TOKEN=xxxxxx-xxxxxx
       - PLEX_PATH=/share/CACHEDEV1_DATA/Multimedia/Music/_tidarr
       - ENABLE_GOTIFY=true
       - GOTIFY_URL=http://push.pi.docker
-      - GOTIFY_TOKEN=AMWzZcjUWqAJP8_
-      - ADMIN_PASSWORD=T1d4rr!!
+      - GOTIFY_TOKEN=xxxxxx
+      - ADMIN_PASSWORD=xxxxxx
     labels:
       - traefik.enable=true
       - traefik.http.routers.tidarr.rule=Host(`tidarr.nas.docker`)
       - traefik.port=80
+
+  # https://github.com/rommapp/romm
+
+  romm:
+    image: rommapp/romm:latest
+    container_name: romm
+    restart: unless-stopped
+    environment:
+      - DB_HOST=romm-db
+      - DB_NAME=romm # Should match MARIADB_DATABASE in mariadb
+      - DB_USER=romm-user # Should match MARIADB_USER in mariadb
+      - DB_PASSWD=romm-passwd # Should match MARIADB_PASSWORD in mariadb
+      - ROMM_AUTH_SECRET_KEY= xxxxx # Generate a key with `openssl rand -hex 32`
+      - IGDB_CLIENT_ID= # Generate an ID and SECRET in IGDB
+      - IGDB_CLIENT_SECRET= # https://docs.romm.app/latest/Getting-Started/Generate-API-Keys/#igdb
+      - MOBYGAMES_API_KEY= # https://docs.romm.app/latest/Getting-Started/Generate-API-Keys/#mobygames
+      - STEAMGRIDDB_API_KEY= # https://docs.romm.app/latest/Getting-Started/Generate-API-Keys/#steamgriddb
+      - SCREENSCRAPER_USER= # Use your ScreenScraper username and password
+      - SCREENSCRAPER_PASSWORD= # https://docs.romm.app/latest/Getting-Started/Generate-API-Keys/#screenscraper
+      - RETROACHIEVEMENTS_API_KEY= # https://api-docs.retroachievements.org/#api-access
+    volumes:
+      - romm_resources:/romm/resources # Resources fetched from IGDB (covers, screenshots, etc.)
+      - romm_redis_data:/redis-data # Cached data for background tasks
+      - /share/CACHEDEV1_DATA/Container/romm/library:/romm/library # Your game library. Check https://github.com/rommapp/romm?tab=readme-ov-file#folder-structure for more details.
+      - /share/CACHEDEV1_DATA/Container/romm/assets:/romm/assets # Uploaded saves, states, etc.
+      - /share/CACHEDEV1_DATA/Container/romm/config:/romm/config # Path where config.yml is stored
+    depends_on:
+      romm-db:
+        condition: service_healthy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.romm.rule=Host(`romm.nas.docker`)
+      - traefik.http.services.romm.loadbalancer.server.port=8080
+      - traefik.port=80
+
+  romm-db:
+    image: mariadb:latest
+    container_name: romm-db
+    restart: unless-stopped
+    environment:
+      - MARIADB_DATABASE=romm
+      - MARIADB_USER=romm-user
+      - MARIADB_PASSWORD=romm-passwd
+      - MARIADB_ROOT_PASSWORD=root-passwd
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # https://github.com/nicolargo/glances
 
@@ -252,6 +306,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - /share/CACHEDEV1_DATA/Container/watchtower/config.json:/config.json
     environment:
+      - WATCHTOWER_CLEANUP=true
       - WATCHTOWER_NOTIFICATIONS=gotify
       - WATCHTOWER_NOTIFICATION_GOTIFY_URL=http://push.pi.docker
-      - WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN=ArQd6F4o1j4zQka
+      - WATCHTOWER_NOTIFICATION_GOTIFY_TOKEN=xxxxxx
