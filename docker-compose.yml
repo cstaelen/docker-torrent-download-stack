@@ -187,10 +187,7 @@ services:
     container_name: 'tidarr'
     volumes:
       - /share/CACHEDEV1_DATA/Container/tidarr/config:/home/app/standalone/shared
-      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/albums:/home/app/standalone/download/albums
-      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/tracks:/home/app/standalone/download/tracks
-      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/playslits:/home/app/standalone/download/playlists
-      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr/videos:/home/app/standalone/download/videos
+      - /share/CACHEDEV1_DATA/Multimedia/Music/_tidarr:/home/app/standalone/library
     restart: 'unless-stopped'
     ports:
       - 8484:8484
@@ -207,10 +204,30 @@ services:
       - GOTIFY_URL=http://push.pi.docker
       - GOTIFY_TOKEN=xxxxxx
       - ADMIN_PASSWORD=xxxxxx
+      - ENABLE_TIDAL_PROXY=true
     labels:
       - traefik.enable=true
       - traefik.http.routers.tidarr.rule=Host(`tidarr.nas.docker`)
       - traefik.port=80
+  
+  # https://hub.docker.com/r/linuxserver/plex
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      #- PUID=1000
+      #- PGID=1000
+      - TZ=Europe/Paris
+      - VERSION=docker
+      - PLEX_CLAIM= #optional
+    volumes:
+      - /share/CACHEDEV1_DATA/Container/plex/config:/config
+      - /share/CACHEDEV1_DATA/Multimedia/TvShow:/share/CACHEDEV1_DATA/Multimedia/TvShow
+      - /share/CACHEDEV1_DATA/Multimedia/Movies:/share/CACHEDEV1_DATA/Multimedia/Movies
+      - /share/CACHEDEV1_DATA/Multimedia/Music:/share/CACHEDEV1_DATA/Multimedia/Music
+    restart: unless-stopped
 
   # https://github.com/rommapp/romm
 
